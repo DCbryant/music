@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .clearfix::after{
+            content: '';
+            display: block;
+            clear: both;
+        }
+
+        body{
+            height: 100vh;
+        }
+
+        .cover{
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url(http://cloud.hunger-valley.com/17-9-22/87786461.jpg) center center no-repeat;
+            background-size: cover;
+            filter: blur(5px);
+        }
+
+        .musicbox{
+            position: absolute;
+            top:50%;
+            left:50%;
+            transform: translate(-50%,-50%);
+            font-family: sans-serif;
+            font-size: 16px;
+            color: salmon;
+            width: 340px;
+            background-color: #fff;
+        }
+
+        .music-panel{
+            border: 1px solid #76dba3;
+            padding: 20px 20px 5px 20px;
+            box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.1), 0px 2px 10px 0px rgba(0, 0, 0, 0.05);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .music-control{
+            margin-top: 20px;
+            font-size: 22px;
+            color: sandybrown;
+            float: left;
+        }
+
+        .music-control .fa{
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .music-control .fa.disable{
+            opacity: 0.3;
+        }
+
+        .music-info{
+            margin-left: 120px;
+        }
+
+        .music-info .title{
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+
+        .music-info .auther{
+            font-size: 12px;
+        }
+
+        .music-progress{
+            width: 260px;
+        }
+
+        .music-progress .bar{
+            height: 3px;
+            margin-top: 5px;
+            background-color: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .music-progress-now{
+            background-color: salmon;
+            height: 3px;
+            width: 0;
+            position: relative;
+        }
+
+        .music-progress .time{
+            text-align: right;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="cover"></div>
+    <div class="musicbox">
+        <div class="music-panel">
+            <div class="music clearfix">
+                <div class="music-control">
+                    <span class="back"><i class="fa fa-step-backward"></i></span>
+                    <span class="play"><i class="fa fa-pause"></i></span>
+                    <span class="forward"><i class="fa fa-step-forward"></i></span>
+                </div>
+                <div class="music-info">
+                    <div class="title">my song</div>
+                    <div class="auther">dcbryant</div>
+                </div>
+            </div>
+            <div class="music-progress">
+                <div class="bar">
+                    <div class="music-progress-total"></div>
+                    <div class="music-progress-now"></div>
+                </div>
+                <div class="time">0.00</div>
+            </div>
+        </div>
+        <ul class="music-list">
+            <!-- <li></li> -->
+        </ul>
+    </div>
+    
+    <script>
+        var musicList = []
+        var currentIndex = 0
+        var clock
+        var audio = new Audio()
+        audio.autoplay = true
+        
+        getMusicList(function(list){
+            musicList = list
+            loadMusic(musicList[currentIndex])
+        })
+
+        // 展示时间
+        audio.ontimeupdate = function(){
+            // 当前时间/总时间
+            $('.music-progress .music-progress-now').style.width = (this.currentTime / this.duration) * 100 + '%'
+        }
+
+        // 将时间的显示逻辑放在onlpay这个事件
+        audio.onplay = function(){
+            clock = setInterval(() => {
+                var min = Math.floor(this.currentTime / 60)  
+                var sec = Math.floor(this.currentTime % 60) 
+                sec = sec > 10 ? sec : '0' + sec 
+                var time = min + ':' + sec
+                $('.music-progress .time').innerText = time
+            })
+        }
+
+        audio.onpause = function(){
+            clearInterval(clock)
+        }
+
+        // 播放 暂停
+        $('.music-control .play').onclick = function(){
+            if(audio.paused){
+                audio.play()
+                this.querySelector('.fa').classList.add('fa-pause')
+                this.querySelector('.fa').classList.remove('fa-play')
+            }else{
+                audio.pause()
+                this.querySelector('.fa').classList.add('fa-play')
+                this.querySelector('.fa').classList.remove('fa-pause')
+            }
+        }
+
+        // 向前向后播放
+        $('.music-control .forward').onclick = function(){
+            currentIndex = ++currentIndex % musicList.length
+            loadMusic(musicList[currentIndex])
+        }
+
+        $('.music-control .back').onclick = function(){
+            currentIndex = (musicList.length + --currentIndex) % musicList.length
+            loadMusic(musicList[currentIndex])
+        }
+        
+
+        // 拖动进度条
+        $('.music-progress .bar').onclick = function(e){
+            var percent = e.offsetX / parseInt(getComputedStyle(this,null).width)
+            audio.currentTime = audio.duration * percent
+        }
+
+        // 播放歌曲，改变title auther 背景图
+        function loadMusic(musicObj){
+            console.log('begin play',musicObj)
+            $('.music-info .title').innerText = musicObj.title
+            $('.music-info .auther').innerText = musicObj.auther
+            $('.cover').style.backgroundImage = 'url(' + musicObj.img+ ')'
+            audio.src = musicObj.src
+        }
+
+        // 播放结束自动播放
+        audio.onended = function(){
+            currentIndex = (++currentIndex) % musicList.length
+            loadMusic(musicList[currentIndex])
+        }
+
+        function $(selector){
+            return document.querySelector(selector)
+        }
+
+        function getMusicList(cb){
+            var xhr = new XMLHttpRequest()
+            xhr.open('GET','./music.json',true)
+            xhr.onload = function(){
+                if((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304){
+                    console.log(JSON.parse(this.responseText))
+                    cb(JSON.parse(this.responseText))
+                }else{
+                    console.log('获取数据失败')
+                }
+            }
+            xhr.onerror = function(){
+                console.log('error')
+            }
+            xhr.send()
+        }
+        
+    </script>
+</body>
+</html>
