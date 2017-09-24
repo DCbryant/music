@@ -23,15 +23,11 @@
             height: 100vh;
         }
 
-        .cover{
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: url(http://cloud.hunger-valley.com/17-9-22/87786461.jpg) center center no-repeat;
-            background-size: cover;
-            filter: blur(5px);
+        *{
+            box-sizing: border-box;
         }
 
+        
         .musicbox{
             position: absolute;
             top:50%;
@@ -40,13 +36,20 @@
             font-family: sans-serif;
             font-size: 16px;
             color: salmon;
-            width: 340px;
+            width: 400px;
             background-color: #fff;
         }
 
+        .music-avater{
+            height: 160px;
+            background: url(http://cloud.hunger-valley.com/17-9-22/87786461.jpg) center center no-repeat;
+            background-size:cover;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
         .music-panel{
-            border: 1px solid #76dba3;
-            padding: 20px 20px 5px 20px;
+            padding: 20px 40px;
             box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.1), 0px 2px 10px 0px rgba(0, 0, 0, 0.05);
             background-color: rgba(255, 255, 255, 0.9);
         }
@@ -68,7 +71,7 @@
         }
 
         .music-info{
-            margin-left: 120px;
+            margin-left: 140px;
         }
 
         .music-info .title{
@@ -81,32 +84,93 @@
         }
 
         .music-progress{
-            width: 260px;
+            width: 320px;
         }
 
         .music-progress .bar{
-            height: 3px;
-            margin-top: 5px;
+            height: 8px;
+            margin: 10px 0;
             background-color: rgba(0, 0, 0, 0.2);
             cursor: pointer;
+            border-radius: 8px;
         }
 
         .music-progress-now{
             background-color: salmon;
-            height: 3px;
+            height: 8px;
+            border-radius: 8px;
             width: 0;
             position: relative;
         }
 
-        .music-progress .time{
-            text-align: right;
+        .music-progress .tool{
+            display: flex;
+            align-items: center;
+        }
+        .volume{
+            display: flex;
+        }
+        .volume i{
+            margin: 0 6px;
+            cursor: pointer;
+        }
+        .volume-bar{
+            height: 16px;
+            width: 182px;
+            background-color: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            border-radius: 20px;
+        }
+        .volume-now{
+            background-color: salmon;
+            height: 16px;
+            border-radius: 20px;
+            width: 0;
+            position: relative;
+        }
+        .menu i{
+            margin-left: 6px;
+            cursor: pointer;
         }
 
+        .music-list{
+            /* list-style: none; */
+            height: 200px;
+            overflow-y: auto;
+        }
+        .music-list li{
+            position: relative;
+            height: 32px;
+            line-height: 32px;
+            padding: 0 16px;
+            font-size: 12px;
+            border-top: 1px solid #e9e9e9;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .music-list li:hover{
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        li.active::before{
+            position: absolute;
+            left: 1px;
+            top: 6px;
+            content: '';
+            display: block;
+            width: 3px;
+            height: 20px;
+            background-color: salmon;
+        }
+        .fade{
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="cover"></div>
     <div class="musicbox">
+        <div class="music-avater"></div>
         <div class="music-panel">
             <div class="music clearfix">
                 <div class="music-control">
@@ -124,11 +188,33 @@
                     <div class="music-progress-total"></div>
                     <div class="music-progress-now"></div>
                 </div>
-                <div class="time">0.00</div>
+                <div class="tool">
+                    <div class="current-time">0.00</div>
+                    <div class="total-time">0.00</div>
+                    <div class="volume">
+                        <i class="fa fa-volume-up" aria-hidden="true"></i>
+                        <div class="volume-bar">
+                            <div class="volume-total"></div>
+                            <div class="volume-now"></div>
+                        </div>
+                    </div>
+                    <div class="menu">
+                            <i class="fa fa-bars" aria-hidden="true"></i>
+                    </div>
+                </div>
+                
+
             </div>
         </div>
-        <ul class="music-list">
-            <!-- <li></li> -->
+        <ul class="music-list fade">
+            <li><h3>尽头</h3><div class="auther">dcbryant</div></li>
+            <li class="active">1</li>
+            <li>1</li>
+            <li>1</li>
+            <li>1</li>
+            <li>1</li>
+            <li>1</li>
+            <li>1</li>
         </ul>
     </div>
     
@@ -137,7 +223,9 @@
         var currentIndex = 0
         var clock
         var audio = new Audio()
+        var volume = 0.4
         audio.autoplay = true
+        audio.volume = volume
         
         getMusicList(function(list){
             musicList = list
@@ -153,12 +241,21 @@
         // 将时间的显示逻辑放在onlpay这个事件
         audio.onplay = function(){
             clock = setInterval(() => {
-                var min = Math.floor(this.currentTime / 60)  
-                var sec = Math.floor(this.currentTime % 60) 
-                sec = sec > 10 ? sec : '0' + sec 
-                var time = min + ':' + sec
-                $('.music-progress .time').innerText = time
+                var currentTime = formatTime(this.currentTime)
+                var totalTime = formatTime(this.duration)
+                $('.tool .current-time').innerText = currentTime
+                $('.tool .total-time').innerText = '/' + totalTime
             })
+        }
+
+        // 转换时间戳格式
+        function formatTime(time){
+            var min = Math.floor(time / 60)  
+            var sec = Math.floor(time % 60) 
+            sec = sec < 10 ? ('0' + sec) : sec;
+            min = min < 10 ? ('0' + min) : min;
+            time = min + ':' + sec
+            return time
         }
 
         audio.onpause = function(){
@@ -196,12 +293,60 @@
             audio.currentTime = audio.duration * percent
         }
 
+        // 拖动声音进度条
+        $('.volume-bar').onclick = function(e){
+            var percent = e.offsetX / parseInt(getComputedStyle(this,null).width)
+            audio.volume = percent
+            this.querySelector('.volume-now').style.width = percent * 100 + '%'
+        }
+
+        $('.volume i').onclick = function(){
+            if(audio.muted){
+                audio.muted = false
+                this.querySelector('i').classList.add('fa-volume-up')
+                this.querySelector('i').classList.remove('fa-volume-down')
+                $('.volume-bar .volume-now').style.width = volume * 100 + '%'
+            }else{
+                audio.muted = true
+                this.querySelector('i').classList.remove('fa-volume-up')
+                this.querySelector('i').classList.add('fa-volume-down')
+                $('.volume-bar .volume-now').style.width = 0
+            }
+        }
+
+        // 事件代理
+        var $lis = $$('.music-list li')
+        $('.music-list').onclick = function(e){
+            var target = e.target
+            if(target.tagName.toLowerCase() === 'li'){
+                for(var i=0;i<$lis.length;i++){
+                    $lis[i].classList.remove('active')
+                }
+                target.classList.add('active')
+            }
+
+        }
+
+        $('.menu').onclick = function(){
+            if($('.music-list').classList.contains('fade')){
+                $('.music-list').classList.remove('fade')
+                // fa-sort-amount-desc
+                this.querySelector('i').classList.add('fa-sort-amount-desc')
+                this.querySelector('i').classList.remove('fa-bars')
+            }else{
+                $('.music-list').classList.add('fade')
+                this.querySelector('i').classList.remove('fa-sort-amount-desc')
+                this.querySelector('i').classList.add('fa-bars')
+            }
+        }
+
         // 播放歌曲，改变title auther 背景图
         function loadMusic(musicObj){
             console.log('begin play',musicObj)
             $('.music-info .title').innerText = musicObj.title
             $('.music-info .auther').innerText = musicObj.auther
-            $('.cover').style.backgroundImage = 'url(' + musicObj.img+ ')'
+            $('.music-avater').style.backgroundImage = 'url(' + musicObj.img+ ')'
+            $('.volume-bar .volume-now').style.width = volume * 100 + '%'
             audio.src = musicObj.src
         }
 
@@ -213,6 +358,9 @@
 
         function $(selector){
             return document.querySelector(selector)
+        }
+        function $$(selector){
+            return document.querySelectorAll(selector)
         }
 
         function getMusicList(cb){
