@@ -303,13 +303,13 @@
         $('.volume i').onclick = function(){
             if(audio.muted){
                 audio.muted = false
-                this.querySelector('i').classList.add('fa-volume-up')
-                this.querySelector('i').classList.remove('fa-volume-down')
+                this.classList.add('fa-volume-up')
+                this.classList.remove('fa-volume-down')
                 $('.volume-bar .volume-now').style.width = volume * 100 + '%'
             }else{
                 audio.muted = true
-                this.querySelector('i').classList.remove('fa-volume-up')
-                this.querySelector('i').classList.add('fa-volume-down')
+                this.classList.remove('fa-volume-up')
+                this.classList.add('fa-volume-down')
                 $('.volume-bar .volume-now').style.width = 0
             }
         }
