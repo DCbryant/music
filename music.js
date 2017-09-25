@@ -154,7 +154,7 @@
             // 播放结束自动播放
             this.audio.onended = function(){
                 self.currentIndex = (++self.currentIndex) % self.musicList.length
-                self.loadMusic(musicList[currentIndex])
+                self.loadMusic(self.musicList[self.currentIndex])
             }
         },
         getMusicList:function(cb){
